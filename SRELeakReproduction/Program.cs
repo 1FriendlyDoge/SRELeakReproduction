@@ -38,7 +38,7 @@ class Program
     {
         try
         {
-            Stream bufferedByteStream = new BufferedByteStream(48000);
+            using (Stream bufferedByteStream = new BufferedByteStream(48000))
             using (Stream originStream = new NetworkStream(client, true))
             {
                 Console.WriteLine("Accepted Client");
@@ -69,9 +69,8 @@ class Program
                     engine.SpeechRecognized += HandleSpeechRecognized;
                     engine.SetInputToAudioStream(bufferedByteStream, new SpeechAudioFormatInfo(EncodingFormat.Pcm, 48000, 16, 2, 192000, 4, null));
                     engine.RecognizeAsync(RecognizeMode.Multiple);
-                    bool disposed = false;
                     
-                    while (!disposed)
+                    while (true)
                     {
                         Thread.Sleep(100);
                         try
@@ -82,14 +81,12 @@ class Program
                         catch (IOException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionReset })
                         {
                             Console.WriteLine("Connection was forcibly closed by the remote host.");
-                            bufferedByteStream.Close();
-                            disposed = true;
+                            break;
                         }
                     }
                 }
                 Console.WriteLine("Disposed Engine");
             }
-            bufferedByteStream.Close();
             Console.WriteLine("Disposed Streams");
         }
         catch (Exception ex)

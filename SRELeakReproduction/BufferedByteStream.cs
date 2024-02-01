@@ -3,7 +3,7 @@
 class BufferedByteStream : Stream
 {
     private AutoResetEvent _writeEvent;
-    private readonly List<byte> _buffer;
+    private List<byte> _buffer;
     private readonly int _size;
     private int _readPos;
     private int _writePos;
@@ -79,20 +79,22 @@ class BufferedByteStream : Stream
         }
         _writeEvent.Set();
     }
-
-    private bool _disposed;
     
     public override void Close()
     {
-        if (_disposed) return;
-        _disposed = true;
         _writeEvent.Close();
         _writeEvent = null!;
+        _buffer = null!;
         base.Close();
     }
 
     public override void Flush()
     {
         
+    }
+    
+    protected override void Dispose(bool disposing)
+    {
+        Close();
     }
 }
